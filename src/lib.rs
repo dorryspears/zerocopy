@@ -1899,7 +1899,7 @@ pub unsafe trait FromBytes: FromZeros {
     where
         Self: Sized + NoCell,
     {
-        Ref::<&[u8], Self>::new_from_prefix(bytes).map(|(r, _)| r.into_ref())
+        Ref::<&[u8], Self>::new_from_prefix(bytes).map(|(r, _)| Ref::<&[u8], Self>::into_ref(r))
     }
 
     /// Interprets the suffix of the given `bytes` as a `&Self` without copying.
@@ -1935,7 +1935,7 @@ pub unsafe trait FromBytes: FromZeros {
     where
         Self: Sized + NoCell,
     {
-        Ref::<&[u8], Self>::new_from_suffix(bytes).map(|(_, r)| r.into_ref())
+        Ref::<&[u8], Self>::new_from_suffix(bytes).map(|(_, r)| Ref::<&[u8], Self>::into_ref(r))
     }
 
     /// Interprets the given `bytes` as a `&mut Self` without copying.
@@ -4829,14 +4829,14 @@ where
     ///
     /// `into_ref` consumes the `Ref`, and returns a reference to `T`.
     #[inline(always)]
-    pub fn into_ref(self) -> &'a T {
+    pub fn into_ref(s: Self) -> &'a T {
         assert!(B::INTO_REF_INTO_MUT_ARE_SOUND);
 
         // SAFETY: According to the safety preconditions on
         // `ByteSlice::INTO_REF_INTO_MUT_ARE_SOUND`, the preceding assert
         // ensures that, given `B: 'a`, it is sound to drop `self` and still
         // access the underlying memory using reads for `'a`.
-        unsafe { self.deref_helper() }
+        unsafe { Self::deref_helper(&s) }
     }
 }
 
